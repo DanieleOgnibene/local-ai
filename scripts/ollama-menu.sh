@@ -19,10 +19,10 @@ function list_models() {
 
 function pull_model() {
   echo -e "🌐 Browse models here: https://ollama.com/search\n"
-  read -p "Enter model name to pull (e.g. deepseek-coder-v2): " model
+  read -p "Enter model name to pull (e.g. deepseek-coder-v2 or deepseek-r1:32b): " model
   if [[ -n "$model" ]]; then
     echo -e "\n⬇️ Pulling model: $model\n"
-    docker exec -it "$CONTAINER_NAME_OLLAMA" ollama pull "$model"
+    docker exec -it "$CONTAINER_NAME_OLLAMA" bash -c "ollama pull \"$model\""
     pause
   else
     echo "⚠️ No model name entered. Returning to menu."
@@ -62,21 +62,13 @@ function delete_model() {
 
 function chat_with_model() {
   if select_model; then
-    echo -e "\n💬 Chatting with: $selected_model"
-    echo "Type your prompt. Type 'exit' or 'quit' to return to the menu."
-    echo ""
-
+    echo "💬 Chatting with: $selected_model"
+    echo "Type your prompt (Ctrl+C to quit):"
     while true; do
       read -p "> " prompt
-
-      if [[ "$prompt" =~ ^(exit|quit)$ ]]; then
-        echo "👋 Exiting chat with $selected_model."
-        break
-      elif [[ -z "$prompt" ]]; then
+      if [[ -z "$prompt" ]]; then
         continue
       fi
-
-      echo ""
       docker exec -i "$CONTAINER_NAME_OLLAMA" ollama run "$selected_model" <<< "$prompt"
       echo ""
     done
