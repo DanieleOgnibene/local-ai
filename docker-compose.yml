@@ -1,0 +1,36 @@
+version: "3.8"
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ${CONTAINER_NAME_OLLAMA}
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+    volumes:
+      - ollama_data:/root/.ollama
+    ports:
+      - "11434:11434"
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: ${CONTAINER_NAME_WEBUI}
+    depends_on:
+      - ollama
+    environment:
+      - OLLAMA_API_BASE_URL=http://${CONTAINER_NAME_OLLAMA}:11434
+    ports:
+      - "${WEBUI_PORT}:8080"
+    volumes:
+      - openwebui_data:/app/backend/data
+    restart: unless-stopped
+
+volumes:
+  ollama_data:
+  openwebui_data:
